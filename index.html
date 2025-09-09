@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Windows 95 Simulator</title>
+    <link rel="stylesheet" href="index.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -20,7 +21,7 @@
     </script>
   </head>
   <body>
-    <div class="desktop" id="desktop" style="background-image: url('https://storage.googleapis.com/gemini-95-wallpapers/kant-klao-shop.png'); background-size: cover; background-position: center;">
+    <div class="desktop desktop-taskbar-bottom" id="desktop" style="background-image: url('https://storage.googleapis.com/gemini-95-wallpapers/kant-klao-shop.png'); background-size: cover; background-position: center;">
       <!-- Desktop Icons -->
       <div class="icon" data-app="myComputer">
         <img
@@ -359,57 +360,91 @@
         </div>
       </div>
 
-      <div class="window resizable" id="displayProperties" style="width: 420px; height: 420px;">
-        <div class="window-titlebar">
-            <span class="window-title">Display Properties</span>
-            <div class="window-controls">
-                <div class="window-minimize window-control-button">−</div>
-                <div class="window-close window-control-button">✕</div>
-            </div>
-        </div>
-        <div class="window-content" style="background-color: #c0c0c0; padding: 10px;">
-            <div class="display-properties-preview">
-                 <div class="preview-monitor">
-                     <div class="preview-screen" id="preview-screen"></div>
-                 </div>
-            </div>
-            <div class="display-properties-options">
-                <fieldset class="win95-fieldset" style="flex-grow: 1;">
-                    <legend>Wallpaper</legend>
-                    <ul class="wallpaper-list" id="wallpaper-list">
-                        <li data-wallpaper="none">None</li>
-                        <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/clouds.jpg">Clouds</li>
-                        <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/geometric.png">Geometric</li>
-                        <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/gemini95.png">Gemini 95</li>
-                        <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/kant-klao-shop.png">Kant Klao Shop</li>
-                    </ul>
-                     <div class="wallpaper-style-container">
-                        <label for="wallpaper-style-select">Display:</label>
-                        <select id="wallpaper-style-select">
-                            <option value="cover">Stretch</option>
-                            <option value="contain">Center</option>
-                            <option value="repeat">Tile</option>
-                        </select>
-                    </div>
-                </fieldset>
-                <fieldset class="win95-fieldset">
-                    <legend>Color</legend>
-                    <div class="color-swatches" id="color-swatches">
-                        <div class="color-swatch" data-color="#008080" style="background-color: #008080;" title="Teal"></div>
-                        <div class="color-swatch" data-color="#808080" style="background-color: #808080;" title="Gray"></div>
-                        <div class="color-swatch" data-color="#000080" style="background-color: #000080;" title="Navy"></div>
-                        <div class="color-swatch" data-color="#000000" style="background-color: #000000;" title="Black"></div>
-                        <div class="color-swatch" data-color="#800080" style="background-color: #800080;" title="Purple"></div>
-                        <div class="color-swatch" data-color="#008000" style="background-color: #008000;" title="Green"></div>
-                    </div>
-                </fieldset>
-            </div>
-            <div class="display-properties-buttons">
-                <button id="display-ok-btn">OK</button>
-                <button id="display-cancel-btn">Cancel</button>
-                <button id="display-apply-btn">Apply</button>
-            </div>
-        </div>
+      <div class="window resizable" id="displayProperties" style="width: 480px; height: 480px;">
+          <div class="window-titlebar">
+              <span class="window-title">Display Properties</span>
+              <div class="window-controls">
+                  <div class="window-minimize window-control-button">−</div>
+                  <div class="window-close window-control-button">✕</div>
+              </div>
+          </div>
+          <div class="window-content" style="background-color: #c0c0c0; padding: 10px;">
+              <div class="display-tabs" id="display-tabs">
+                  <button class="display-tab active" data-tab="background">Background</button>
+                  <button class="display-tab" data-tab="appearance">Appearance</button>
+              </div>
+
+              <div class="display-tab-content active" id="tab-content-background">
+                  <div class="display-properties-preview">
+                      <div class="preview-monitor">
+                          <div class="preview-screen" id="preview-screen"></div>
+                          <div class="preview-taskbar" id="preview-taskbar"></div>
+                      </div>
+                  </div>
+                  <div class="display-properties-options">
+                      <fieldset class="win95-fieldset" style="flex-grow: 1;">
+                          <legend>Wallpaper</legend>
+                          <ul class="wallpaper-list" id="wallpaper-list">
+                              <li data-wallpaper="none">None</li>
+                              <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/clouds.jpg">Clouds</li>
+                              <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/geometric.png">Geometric</li>
+                              <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/gemini95.png">Gemini 95</li>
+                              <li data-wallpaper="https://storage.googleapis.com/gemini-95-wallpapers/kant-klao-shop.png">Kant Klao Shop</li>
+                          </ul>
+                          <div class="wallpaper-style-container">
+                              <label for="wallpaper-style-select">Display:</label>
+                              <select id="wallpaper-style-select">
+                                  <option value="cover">Stretch</option>
+                                  <option value="contain">Center</option>
+                                  <option value="repeat">Tile</option>
+                              </select>
+                          </div>
+                      </fieldset>
+                      <fieldset class="win95-fieldset">
+                          <legend>Color</legend>
+                          <div class="color-swatches" id="desktop-color-swatches">
+                              <div class="color-swatch" data-color="#008080" style="background-color: #008080;" title="Teal"></div>
+                              <div class="color-swatch" data-color="#808080" style="background-color: #808080;" title="Gray"></div>
+                              <div class="color-swatch" data-color="#000080" style="background-color: #000080;" title="Navy"></div>
+                              <div class="color-swatch" data-color="#000000" style="background-color: #000000;" title="Black"></div>
+                              <div class="color-swatch" data-color="#800080" style="background-color: #800080;" title="Purple"></div>
+                              <div class="color-swatch" data-color="#008000" style="background-color: #008000;" title="Green"></div>
+                          </div>
+                      </fieldset>
+                  </div>
+              </div>
+
+              <div class="display-tab-content" id="tab-content-appearance">
+                  <div class="appearance-settings-container">
+                      <fieldset class="win95-fieldset">
+                          <legend>Taskbar Position</legend>
+                          <div class="taskbar-position-options" id="taskbar-position-options">
+                              <label><input type="radio" name="taskbar-pos" value="bottom" checked> Bottom</label>
+                              <label><input type="radio" name="taskbar-pos" value="top"> Top</label>
+                              <label><input type="radio" name="taskbar-pos" value="left"> Left</label>
+                              <label><input type="radio" name="taskbar-pos" value="right"> Right</label>
+                          </div>
+                      </fieldset>
+                      <fieldset class="win95-fieldset">
+                          <legend>Taskbar Color</legend>
+                          <div class="color-swatches" id="taskbar-color-swatches">
+                              <div class="color-swatch" data-color="#c0c0c0" style="background-color: #c0c0c0;" title="Silver"></div>
+                              <div class="color-swatch" data-color="#808080" style="background-color: #808080;" title="Gray"></div>
+                              <div class="color-swatch" data-color="#000080" style="background-color: #000080;" title="Navy"></div>
+                              <div class="color-swatch" data-color="#000000" style="background-color: #000000;" title="Black"></div>
+                              <div class="color-swatch" data-color="#800000" style="background-color: #800000;" title="Maroon"></div>
+                              <div class="color-swatch" data-color="#808000" style="background-color: #808000;" title="Olive"></div>
+                          </div>
+                      </fieldset>
+                  </div>
+              </div>
+
+              <div class="display-properties-buttons">
+                  <button id="display-ok-btn">OK</button>
+                  <button id="display-cancel-btn">Cancel</button>
+                  <button id="display-apply-btn">Apply</button>
+              </div>
+          </div>
       </div>
 
 
@@ -427,9 +462,9 @@
       </div>
 
       <!-- Taskbar -->
-      <div id="taskbar">
+      <div id="taskbar" class="position-bottom">
         <button id="start-button">
-          <img src="https://storage.googleapis.com/gemini-95-icons/GeminiChatRetro.png" alt="Start" />
+          <img src="https://win98icons.alexmeub.com/icons/png/windows-0.png" alt="Start" />
           <span>Start</span>
         </button>
         <div id="taskbar-apps"></div>

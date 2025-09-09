@@ -1,12 +1,15 @@
 /* Base styles */
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: #008080; /* Teal background */
+html, body {
+  height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent scrollbars */
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background-color: #008080; /* Teal background */
   color: black;
 }
+
 
 /* Desktop styles */
 .desktop {
@@ -15,9 +18,19 @@ body {
   overflow: hidden;
   position: relative; /* For absolute positioning of icons and windows */
   cursor: default; /* Default desktop cursor */
-  padding-top: 10px; /* Add some space at the top */
-  padding-left: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  /* New flex properties for authentic icon layout */
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
 }
+
+.desktop.desktop-taskbar-bottom { padding-bottom: 46px; }
+.desktop.desktop-taskbar-top { padding-top: 46px; }
+.desktop.desktop-taskbar-left { padding-left: 90px; }
+.desktop.desktop-taskbar-right { padding-right: 90px; }
 
 /* Icon styles */
 .icon {
@@ -284,8 +297,6 @@ body {
   border-bottom: 2px solid #000000;
   box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
   position: absolute;
-  bottom: 36px;
-  left: 0;
   width: 180px;
   display: none;
   flex-direction: column;
@@ -314,18 +325,53 @@ body {
 /* Taskbar styles */
 #taskbar {
   background-color: #C0C0C0;
-  border-top: 2px solid #FFFFFF;
   position: fixed;
+  z-index: 40;
+  box-sizing: border-box;
+  display: flex;
+  padding: 3px;
+}
+
+#taskbar.position-bottom {
   bottom: 0;
   left: 0;
   width: 100%;
   height: 36px;
-  display: flex;
+  border-top: 2px solid #FFFFFF;
+  flex-direction: row;
   align-items: center;
-  padding: 3px;
-  z-index: 40;
-  box-sizing: border-box;
 }
+
+#taskbar.position-top {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 36px;
+  border-bottom: 2px solid #000000;
+  flex-direction: row;
+  align-items: center;
+}
+
+#taskbar.position-left {
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 100%;
+  border-right: 2px solid #000000;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#taskbar.position-right {
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 100%;
+  border-left: 2px solid #000000;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 
 #start-button {
   background-color: #C0C0C0;
@@ -334,16 +380,25 @@ body {
   border-right: 2px solid #000000;
   border-bottom: 2px solid #000000;
   padding: 2px 8px;
-  margin-right: 5px;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 30px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
+#taskbar.position-bottom #start-button, #taskbar.position-top #start-button {
+  margin-right: 5px;
+  height: 30px;
+}
+#taskbar.position-left #start-button, #taskbar.position-right #start-button {
+  margin-bottom: 5px;
+  height: 30px;
+  width: 100%;
+}
+
 
 #start-button:active {
  border-top: 2px solid #000000;
@@ -361,9 +416,17 @@ body {
 #taskbar-apps {
   display: flex;
   flex-grow: 1;
+  overflow: hidden;
+}
+#taskbar.position-bottom #taskbar-apps, #taskbar.position-top #taskbar-apps {
+  flex-direction: row;
   height: 100%;
   align-items: center;
-  overflow: hidden;
+}
+#taskbar.position-left #taskbar-apps, #taskbar.position-right #taskbar-apps {
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
 }
 
 .taskbar-app {
@@ -373,14 +436,11 @@ body {
   border-right: 1px solid #000000;
   border-bottom: 1px solid #000000;
   padding: 2px 6px;
-  margin: 0 2px;
   cursor: pointer;
   font-size: 0.75rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
-  height: 28px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -388,6 +448,18 @@ body {
   flex-shrink: 0;
   box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.5);
 }
+#taskbar.position-bottom .taskbar-app, #taskbar.position-top .taskbar-app {
+  max-width: 150px;
+  height: 28px;
+  margin: 0 2px;
+}
+#taskbar.position-left .taskbar-app, #taskbar.position-right .taskbar-app {
+  max-height: 40px;
+  width: 100%;
+  margin: 2px 0;
+  justify-content: flex-start;
+}
+
 
 .taskbar-app img {
   width: 16px;
@@ -405,11 +477,19 @@ body {
 }
 
 #system-tray {
-    margin-left: auto;
     padding: 0 5px;
-    height: 100%;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+}
+#taskbar.position-bottom #system-tray, #taskbar.position-top #system-tray {
+    margin-left: auto;
+    height: 100%;
+}
+#taskbar.position-left #system-tray, #taskbar.position-right #system-tray {
+    margin-top: auto;
+    width: 100%;
+    justify-content: center;
 }
 
 #taskbar-clock {
@@ -1097,8 +1177,46 @@ body {
 
 /* --- Display Properties Styles --- */
 #displayProperties .window-content {
+    gap: 0;
+    padding: 5px;
+}
+.display-tabs {
+    display: flex;
+    border-bottom: 1px solid #808080;
+    padding-left: 5px;
+}
+.display-tab {
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: none;
+    cursor: pointer;
+    position: relative;
+    bottom: -1px;
+}
+.display-tab.active {
+    background-color: #c0c0c0;
+    border: 1px solid #808080;
+    border-bottom: 1px solid #c0c0c0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-top: 1px solid #FFFFFF;
+    border-left: 1px solid #FFFFFF;
+}
+.display-tab-content {
+    display: none;
+    padding: 10px;
+    border: 1px solid #808080;
+    border-top: none;
+    flex-grow: 1;
+    display: none;
+    flex-direction: column;
     gap: 10px;
 }
+.display-tab-content.active {
+    display: flex;
+}
+
 .display-properties-preview {
     display: flex;
     justify-content: center;
@@ -1116,6 +1234,7 @@ body {
     border-radius: 5px 5px 0 0;
     padding: 10px 10px 20px 10px;
     position: relative;
+    overflow: hidden;
 }
 .preview-monitor::after {
     content: '';
@@ -1135,7 +1254,21 @@ body {
     background-size: cover;
     background-position: center;
     border: 1px solid black;
+    position: relative;
+    overflow: hidden;
 }
+
+.preview-taskbar {
+    position: absolute;
+    background-color: #c0c0c0;
+    z-index: 1;
+    transition: all 0.2s ease-in-out;
+}
+.preview-taskbar.position-bottom { bottom: 0; left: 0; width: 100%; height: 12px; }
+.preview-taskbar.position-top { top: 0; left: 0; width: 100%; height: 12px; }
+.preview-taskbar.position-left { left: 0; top: 0; height: 100%; width: 12px; }
+.preview-taskbar.position-right { right: 0; top: 0; height: 100%; width: 12px; }
+
 
 .display-properties-options {
     display: flex;
@@ -1220,4 +1353,22 @@ body {
     border-left: 1px solid #000000;
     border-right: 1px solid #FFFFFF;
     border-bottom: 1px solid #FFFFFF;
+}
+
+#tab-content-appearance {
+    justify-content: center;
+}
+.appearance-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.taskbar-position-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 5px;
+}
+.taskbar-position-options label {
+    font-size: 0.9rem;
 }

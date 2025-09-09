@@ -16,6 +16,7 @@ const windows = document.querySelectorAll('.window') as NodeListOf<HTMLDivElemen
 const icons = document.querySelectorAll('.icon') as NodeListOf<HTMLDivElement>; // This is a NodeList
 const startMenu = document.getElementById('start-menu') as HTMLDivElement;
 const startButton = document.getElementById('start-button') as HTMLButtonElement;
+const taskbar = document.getElementById('taskbar') as HTMLDivElement;
 const taskbarAppsContainer = document.getElementById('taskbar-apps') as HTMLDivElement;
 const paintAssistant = document.getElementById('paint-assistant') as HTMLDivElement;
 const assistantBubble = paintAssistant?.querySelector('.assistant-bubble') as HTMLDivElement;
@@ -143,6 +144,20 @@ async function openApp(appName: string): Promise<void> {
     taskbarAppsContainer.appendChild(taskbarButton);
     openApps.set(appName, { windowEl: windowElement, taskbarButton: taskbarButton });
     taskbarButton.classList.add('active');
+
+    // Randomize initial position
+    const parent = windowElement.offsetParent as HTMLElement;
+    const parentStyle = window.getComputedStyle(parent);
+    const parentPaddingTop = parseFloat(parentStyle.paddingTop);
+    const parentPaddingLeft = parseFloat(parentStyle.paddingLeft);
+    const availableWidth = parent.clientWidth - parent.offsetLeft - parseFloat(parentStyle.paddingRight) - windowElement.offsetWidth;
+    const availableHeight = parent.clientHeight - parent.offsetTop - parseFloat(parentStyle.paddingBottom) - windowElement.offsetHeight;
+
+    const randomTop = Math.random() * (availableHeight / 2) + parentPaddingTop;
+    const randomLeft = Math.random() * (availableWidth / 2) + parentPaddingLeft;
+    windowElement.style.top = `${Math.max(parentPaddingTop, randomTop)}px`;
+    windowElement.style.left = `${Math.max(parentPaddingLeft, randomLeft)}px`;
+
 
     // Initialize specific applications
     if (appName === 'chrome') {
@@ -515,9 +530,34 @@ document.querySelectorAll('.start-menu-item').forEach(item => {
 startButton.addEventListener('click', (e) => {
     e.stopPropagation();
     startMenu.classList.toggle('active');
+
     if (startMenu.classList.contains('active')) {
         highestZIndex++;
         startMenu.style.zIndex = highestZIndex.toString();
+
+        // Position Start Menu based on Taskbar position
+        const taskbarRect = taskbar.getBoundingClientRect();
+        if (taskbar.classList.contains('position-top')) {
+            startMenu.style.top = `${taskbarRect.bottom}px`;
+            startMenu.style.left = `${taskbarRect.left}px`;
+            startMenu.style.bottom = 'auto';
+            startMenu.style.right = 'auto';
+        } else if (taskbar.classList.contains('position-left')) {
+            startMenu.style.left = `${taskbarRect.right}px`;
+            startMenu.style.bottom = '3px'; // Align with bottom of screen
+            startMenu.style.top = 'auto';
+            startMenu.style.right = 'auto';
+        } else if (taskbar.classList.contains('position-right')) {
+            startMenu.style.right = `${window.innerWidth - taskbarRect.left}px`;
+            startMenu.style.bottom = '3px';
+            startMenu.style.top = 'auto';
+            startMenu.style.left = 'auto';
+        } else { // Default bottom
+            startMenu.style.bottom = `${window.innerHeight - taskbarRect.top}px`;
+            startMenu.style.left = `${taskbarRect.left}px`;
+            startMenu.style.top = 'auto';
+            startMenu.style.right = 'auto';
+        }
     }
 });
 
@@ -551,15 +591,32 @@ windows.forEach(windowElement => {
         };
         const dragWindow = (e: MouseEvent) => {
             if (!isDragging) return;
-            let x = e.clientX - dragOffsetX; let y = e.clientY - dragOffsetY;
-            const taskbarHeight = taskbarAppsContainer.parentElement?.offsetHeight ?? 36;
-            const maxX = window.innerWidth - windowElement.offsetWidth;
-            const maxY = window.innerHeight - windowElement.offsetHeight - taskbarHeight;
-            const minX = -(windowElement.offsetWidth - 40);
-            const maxXAdjusted = window.innerWidth - 40;
-            x = Math.max(minX, Math.min(x, maxXAdjusted));
-            y = Math.max(0, Math.min(y, maxY));
-            windowElement.style.left = `${x}px`; windowElement.style.top = `${y}px`;
+            let x = e.clientX - dragOffsetX;
+            let y = e.clientY - dragOffsetY;
+
+            // Constrain to parent's padded area
+            const parent = windowElement.offsetParent as HTMLElement; // This is the desktop
+            const parentStyle = window.getComputedStyle(parent);
+            const parentPaddingTop = parseFloat(parentStyle.paddingTop);
+            const parentPaddingLeft = parseFloat(parentStyle.paddingLeft);
+
+            // Calculate available width/height inside padding
+            const availableWidth = parent.clientWidth;
+            const availableHeight = parent.clientHeight;
+
+            // Allow dragging slightly off-screen left/right
+            const minX = parentPaddingLeft - (windowElement.offsetWidth - 40);
+            const maxX = availableWidth - parentPaddingLeft - 40;
+
+            // Constrain top and bottom fully
+            const minY = parentPaddingTop;
+            const maxY = availableHeight - parentPaddingTop - windowElement.offsetHeight;
+
+            x = Math.max(minX, Math.min(x, maxX));
+            y = Math.max(minY, Math.min(y, maxY));
+
+            windowElement.style.left = `${x}px`;
+            windowElement.style.top = `${y}px`;
         };
         const stopDragging = () => {
             if (!isDragging) return;
@@ -567,13 +624,6 @@ windows.forEach(windowElement => {
             document.removeEventListener('mousemove', dragWindow);
         };
         titleBar.addEventListener('mousedown', startDragging);
-    }
-
-    if (!openApps.has(windowElement.id)) { // Only apply random for newly opened, not for bringToFront
-        const randomTop = Math.random() * (window.innerHeight / 4) + 20;
-        const randomLeft = Math.random() * (window.innerWidth / 3) + 20;
-        windowElement.style.top = `${randomTop}px`;
-        windowElement.style.left = `${randomLeft}px`;
     }
 });
 
@@ -885,84 +935,114 @@ function initMinesweeperGame(windowElement: HTMLDivElement): void {
 }
 
 function initDisplayProperties(windowElement: HTMLDivElement): void {
+    // Tabs
+    const tabs = windowElement.querySelectorAll('.display-tab') as NodeListOf<HTMLButtonElement>;
+    const tabContents = windowElement.querySelectorAll('.display-tab-content') as NodeListOf<HTMLDivElement>;
+
+    // Background Tab Elements
     const previewScreen = document.getElementById('preview-screen') as HTMLDivElement;
     const wallpaperList = document.getElementById('wallpaper-list') as HTMLUListElement;
-    const colorSwatchesContainer = document.getElementById('color-swatches') as HTMLDivElement;
+    const desktopColorSwatches = document.getElementById('desktop-color-swatches') as HTMLDivElement;
     const styleSelect = document.getElementById('wallpaper-style-select') as HTMLSelectElement;
+
+    // Appearance Tab Elements
+    const previewTaskbar = document.getElementById('preview-taskbar') as HTMLDivElement;
+    const taskbarPositionOptions = document.getElementById('taskbar-position-options') as HTMLDivElement;
+    const taskbarColorSwatches = document.getElementById('taskbar-color-swatches') as HTMLDivElement;
+
+    // Common Elements
     const applyBtn = document.getElementById('display-apply-btn') as HTMLButtonElement;
     const okBtn = document.getElementById('display-ok-btn') as HTMLButtonElement;
     const cancelBtn = document.getElementById('display-cancel-btn') as HTMLButtonElement;
 
-    if (!previewScreen || !wallpaperList || !colorSwatchesContainer || !styleSelect || !applyBtn || !okBtn || !cancelBtn) {
+    if (!previewScreen || !wallpaperList || !desktopColorSwatches || !styleSelect || !previewTaskbar || !taskbarPositionOptions || !taskbarColorSwatches || !applyBtn || !okBtn || !cancelBtn) {
         console.error("Display properties elements not found.");
         return;
     }
 
-    let selectedWallpaper: string;
-    let selectedColor: string;
-    let selectedStyle: 'cover' | 'contain' | 'repeat' = 'cover';
+    let tempSettings = {
+        wallpaper: 'none',
+        desktopColor: 'rgb(0, 128, 128)',
+        wallpaperStyle: 'cover' as 'cover' | 'contain' | 'repeat',
+        taskbarPos: 'bottom' as 'top' | 'bottom' | 'left' | 'right',
+        taskbarColor: 'rgb(192, 192, 192)'
+    };
 
     const updatePreview = () => {
-        if (selectedWallpaper !== 'none') {
-            previewScreen.style.backgroundImage = `url(${selectedWallpaper})`;
+        // Update background preview
+        if (tempSettings.wallpaper !== 'none') {
+            previewScreen.style.backgroundImage = `url(${tempSettings.wallpaper})`;
             previewScreen.style.backgroundColor = '';
-            previewScreen.style.backgroundSize = selectedStyle === 'repeat' ? 'auto' : selectedStyle;
-            previewScreen.style.backgroundRepeat = selectedStyle === 'repeat' ? 'repeat' : 'no-repeat';
+            previewScreen.style.backgroundSize = tempSettings.wallpaperStyle === 'repeat' ? 'auto' : tempSettings.wallpaperStyle;
+            previewScreen.style.backgroundRepeat = tempSettings.wallpaperStyle === 'repeat' ? 'repeat' : 'no-repeat';
         } else {
             previewScreen.style.backgroundImage = 'none';
-            previewScreen.style.backgroundColor = selectedColor;
+            previewScreen.style.backgroundColor = tempSettings.desktopColor;
         }
+        // Update taskbar preview
+        previewTaskbar.style.backgroundColor = tempSettings.taskbarColor;
+        previewTaskbar.className = 'preview-taskbar'; // reset
+        previewTaskbar.classList.add(`position-${tempSettings.taskbarPos}`);
     };
 
     const initializeState = () => {
-        selectedColor = desktop.style.backgroundColor || 'rgb(0, 128, 128)';
+        // Initialize background settings
+        tempSettings.desktopColor = desktop.style.backgroundColor || 'rgb(0, 128, 128)';
         const currentBgImage = desktop.style.backgroundImage;
         if (currentBgImage && currentBgImage.includes('url')) {
             const urlMatch = currentBgImage.match(/url\("?(.*?)"?\)/);
-            selectedWallpaper = (urlMatch && urlMatch[1]) ? urlMatch[1] : 'none';
+            tempSettings.wallpaper = (urlMatch && urlMatch[1]) ? urlMatch[1] : 'none';
         } else {
-            selectedWallpaper = 'none';
+            tempSettings.wallpaper = 'none';
         }
+        if (desktop.style.backgroundRepeat === 'repeat') tempSettings.wallpaperStyle = 'repeat';
+        else if (desktop.style.backgroundSize === 'contain') tempSettings.wallpaperStyle = 'contain';
+        else tempSettings.wallpaperStyle = 'cover';
 
-        if (desktop.style.backgroundRepeat === 'repeat') {
-            selectedStyle = 'repeat';
-        } else if (desktop.style.backgroundSize === 'contain') {
-            selectedStyle = 'contain';
-        } else {
-            selectedStyle = 'cover';
-        }
-        styleSelect.value = selectedStyle;
+        // Initialize appearance settings
+        tempSettings.taskbarColor = taskbar.style.backgroundColor || 'rgb(192, 192, 192)';
+        const currentPos = Array.from(taskbar.classList).find(c => c.startsWith('position-'))?.split('-')[1];
+        tempSettings.taskbarPos = (currentPos as typeof tempSettings.taskbarPos) || 'bottom';
 
-        Array.from(wallpaperList.children).forEach(child => {
-            const li = child as HTMLLIElement;
-            li.classList.toggle('selected', li.dataset.wallpaper === selectedWallpaper);
-        });
-        Array.from(colorSwatchesContainer.children).forEach(child => {
-            const swatch = child as HTMLDivElement;
-            swatch.classList.toggle('selected', swatch.dataset.color === selectedColor);
-        });
+        // Update UI controls to match initial state
+        styleSelect.value = tempSettings.wallpaperStyle;
+        (taskbarPositionOptions.querySelector(`input[value="${tempSettings.taskbarPos}"]`) as HTMLInputElement).checked = true;
+
+        Array.from(wallpaperList.children).forEach(child => (child as HTMLLIElement).classList.toggle('selected', (child as HTMLLIElement).dataset.wallpaper === tempSettings.wallpaper));
+        Array.from(desktopColorSwatches.children).forEach(child => (child as HTMLDivElement).classList.toggle('selected', (child as HTMLDivElement).dataset.color === tempSettings.desktopColor));
+        Array.from(taskbarColorSwatches.children).forEach(child => (child as HTMLDivElement).classList.toggle('selected', (child as HTMLDivElement).dataset.color === tempSettings.taskbarColor));
+
         updatePreview();
     };
 
-    initializeState();
+    // --- Event Listeners ---
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            windowElement.querySelector(`#tab-content-${tabName}`)?.classList.add('active');
+        });
+    });
 
     wallpaperList.addEventListener('click', (e) => {
         const target = e.target as HTMLLIElement;
         if (target.tagName === 'LI' && target.dataset.wallpaper) {
-            selectedWallpaper = target.dataset.wallpaper;
+            tempSettings.wallpaper = target.dataset.wallpaper;
             wallpaperList.querySelector('.selected')?.classList.remove('selected');
             target.classList.add('selected');
             updatePreview();
         }
     });
 
-    colorSwatchesContainer.addEventListener('click', (e) => {
+    desktopColorSwatches.addEventListener('click', (e) => {
         const target = e.target as HTMLDivElement;
         if (target.classList.contains('color-swatch') && target.dataset.color) {
-            selectedColor = target.dataset.color;
-            colorSwatchesContainer.querySelector('.selected')?.classList.remove('selected');
+            tempSettings.desktopColor = target.dataset.color;
+            desktopColorSwatches.querySelector('.selected')?.classList.remove('selected');
             target.classList.add('selected');
-            selectedWallpaper = 'none';
+            tempSettings.wallpaper = 'none'; // Selecting a color disables wallpaper
             wallpaperList.querySelector('.selected')?.classList.remove('selected');
             (wallpaperList.querySelector('[data-wallpaper="none"]') as HTMLLIElement)?.classList.add('selected');
             updatePreview();
@@ -970,21 +1050,48 @@ function initDisplayProperties(windowElement: HTMLDivElement): void {
     });
 
     styleSelect.addEventListener('change', () => {
-        selectedStyle = styleSelect.value as 'cover' | 'contain' | 'repeat';
+        tempSettings.wallpaperStyle = styleSelect.value as typeof tempSettings.wallpaperStyle;
         updatePreview();
     });
 
+    taskbarPositionOptions.addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement;
+        if (target.name === 'taskbar-pos') {
+            tempSettings.taskbarPos = target.value as typeof tempSettings.taskbarPos;
+            updatePreview();
+        }
+    });
+
+    taskbarColorSwatches.addEventListener('click', (e) => {
+        const target = e.target as HTMLDivElement;
+        if (target.classList.contains('color-swatch') && target.dataset.color) {
+            tempSettings.taskbarColor = target.dataset.color;
+            taskbarColorSwatches.querySelector('.selected')?.classList.remove('selected');
+            target.classList.add('selected');
+            updatePreview();
+        }
+    });
+
     const applyChanges = () => {
-        if (selectedWallpaper !== 'none') {
-            desktop.style.backgroundImage = `url(${selectedWallpaper})`;
+        // Apply background changes
+        if (tempSettings.wallpaper !== 'none') {
+            desktop.style.backgroundImage = `url(${tempSettings.wallpaper})`;
             desktop.style.backgroundPosition = 'center';
             desktop.style.backgroundColor = '';
-            desktop.style.backgroundSize = selectedStyle === 'repeat' ? 'auto' : selectedStyle;
-            desktop.style.backgroundRepeat = selectedStyle === 'repeat' ? 'repeat' : 'no-repeat';
+            desktop.style.backgroundSize = tempSettings.wallpaperStyle === 'repeat' ? 'auto' : tempSettings.wallpaperStyle;
+            desktop.style.backgroundRepeat = tempSettings.wallpaperStyle === 'repeat' ? 'repeat' : 'no-repeat';
         } else {
             desktop.style.backgroundImage = 'none';
-            desktop.style.backgroundColor = selectedColor;
+            desktop.style.backgroundColor = tempSettings.desktopColor;
         }
+
+        // Apply appearance changes
+        taskbar.style.backgroundColor = tempSettings.taskbarColor;
+        taskbar.className = 'taskbar'; // Reset classes
+        taskbar.classList.add(`position-${tempSettings.taskbarPos}`);
+
+        desktop.className = 'desktop'; // Reset classes
+        desktop.classList.add(`desktop-taskbar-${tempSettings.taskbarPos}`);
     };
 
     applyBtn.addEventListener('click', applyChanges);
@@ -993,7 +1100,11 @@ function initDisplayProperties(windowElement: HTMLDivElement): void {
         closeApp('displayProperties');
     });
     cancelBtn.addEventListener('click', () => closeApp('displayProperties'));
+
+    // Initialize on open
+    initializeState();
 }
+
 
 function initMyComputer(windowElement: HTMLDivElement): void {
     const cDriveIcon = windowElement.querySelector('#c-drive-icon') as HTMLDivElement;
